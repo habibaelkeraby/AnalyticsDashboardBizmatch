@@ -34,7 +34,7 @@ def fetch_data():
     size = 37
     pageNumber = 0
 
-    event_link = "https://newstage.biz-match.appsaya.com/"
+    event_link = "https://bizmatch.appsaya.com/"
     url = event_link + "api/users/search/findByEventIdAndGroupId?projection=withUserGroup&eventId=" + str(
         event_id) + "&groupId=2&size=" + str(size) + "&page=" + str(pageNumber)
     r = requests.get(url, headers={"X-BIZMATCH-API-KEY": API_KEY})
