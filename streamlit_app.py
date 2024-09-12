@@ -27,7 +27,8 @@ def fetch_data():
     except:
         raise TypeError('Missing eventId')
 
-    API_KEY = "W3kwgy2Tn40zr0rHwBFL18ov4Bb5FHA5eZw9CC38knZBb"
+    #API_KEY = "W3kwgy2Tn40zr0rHwBFL18ov4Bb5FHA5eZw9CC38knZBb"
+    API_KEY = 'r&KPHzfiLDOHIN!L@GzKO^MgRf6tIW2I*KDrsmYed$d$BgcspYq0Z6225xbhE%@fNXx&x1pfPBB#e'
     #API_KEY2 = "eoZVbiqh7!&@8TZRP1d3rA0yqs0S4K@1BOKk*Dmiv7iAcZl&tiXeqGmFDwRPg5O"
     API_KEY2 = "r&KPHzfiLDOHIN!L@GzKO^MgRf6tIW2I*KDrsmYed$d$BgcspYq0Z6225xbhE%@fNXx&x1pfPBB#e"
     size = 37
