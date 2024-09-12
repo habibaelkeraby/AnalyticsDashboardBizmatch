@@ -31,7 +31,8 @@ def fetch_data():
     API_KEY = 'r&KPHzfiLDOHIN!L@GzKO^MgRf6tIW2I*KDrsmYed$d$BgcspYq0Z6225xbhE%@fNXx&x1pfPBB#e'
     #API_KEY2 = "eoZVbiqh7!&@8TZRP1d3rA0yqs0S4K@1BOKk*Dmiv7iAcZl&tiXeqGmFDwRPg5O"
     API_KEY2 = "r&KPHzfiLDOHIN!L@GzKO^MgRf6tIW2I*KDrsmYed$d$BgcspYq0Z6225xbhE%@fNXx&x1pfPBB#e"
-    size = 37
+    
+    size = 1
     pageNumber = 0
 
     event_link = "https://bizmatch.appsaya.com/"
@@ -45,21 +46,31 @@ def fetch_data():
     dataset_users = r.json()
     users = dataset_users['_embedded']['users']
     max_page = dataset_users['page']['totalPages']
+    size = dataset_users['page']['totalElements']
 
-    while pageNumber < max_page:
-        for i in range(size):
-            data = users[i]
-            user_data = extract_user_data(data)
-            all_users.append(user_data)
-        pageNumber += 1
-        r = requests.get(url, headers={"X-BIZMATCH-API-KEY": API_KEY})
-        dataset_users = r.json()
-        users = dataset_users['_embedded']['users']
+    r = requests.get(event_link + "api/users/search/findByEventIdAndGroupId?projection=withUserGroup&eventId=" + str(event_id) + "&groupId=2&size=" + str(size) + "&page=" + str(pageNumber), headers={"X-BIZMATCH-API-KEY": API_KEY})
+    dataset_users = r.json()
+    users = dataset_users['_embedded']['users']
+    
+    for i in range(size):
+        data = users[i]
+        user_data = extract_user_data(data)
+        all_users.append(user_data)
+
+    #while pageNumber < max_page:
+        #for i in range(size):
+            #data = users[i]
+            #user_data = extract_user_data(data)
+            #all_users.append(user_data)
+        #pageNumber += 1
+        #r = requests.get(url, headers={"X-BIZMATCH-API-KEY": API_KEY})
+        #dataset_users = r.json()
+        #users = dataset_users['_embedded']['users']
 
     # MEETING API CALL
     # /?event_id=57
     #event_id = st.query_params["event_id"]
-    event_id = 69
+    #event_id = 69
     size2 = 1
     pageNumber2 = 0
     r2 = requests.get(
