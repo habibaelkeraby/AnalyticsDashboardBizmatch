@@ -31,31 +31,33 @@ def fetch_data():
     API_KEY = 'r&KPHzfiLDOHIN!L@GzKO^MgRf6tIW2I*KDrsmYed$d$BgcspYq0Z6225xbhE%@fNXx&x1pfPBB#e'
     #API_KEY2 = "eoZVbiqh7!&@8TZRP1d3rA0yqs0S4K@1BOKk*Dmiv7iAcZl&tiXeqGmFDwRPg5O"
     API_KEY2 = "r&KPHzfiLDOHIN!L@GzKO^MgRf6tIW2I*KDrsmYed$d$BgcspYq0Z6225xbhE%@fNXx&x1pfPBB#e"
-    
-    size = 1
-    pageNumber = 0
 
-    event_link = "https://bizmatch.appsaya.com/"
-    url = event_link + "api/users/search/findByEventIdAndGroupId?projection=withUserGroup&eventId=" + str(
-        event_id) + "&groupId=2&size=" + str(size) + "&page=" + str(pageNumber)
-    r = requests.get(url, headers={"X-BIZMATCH-API-KEY": API_KEY})
 
     # initialize list of lists
     all_users = []
-
-    dataset_users = r.json()
-    users = dataset_users['_embedded']['users']
-    max_page = dataset_users['page']['totalPages']
-    size = dataset_users['page']['totalElements']
-
-    r = requests.get(event_link + "api/users/search/findByEventIdAndGroupId?projection=withUserGroup&eventId=" + str(event_id) + "&groupId=2&size=" + str(size) + "&page=" + str(pageNumber), headers={"X-BIZMATCH-API-KEY": API_KEY})
-    dataset_users = r.json()
-    users = dataset_users['_embedded']['users']
+    # loop for all roles (buyer, seller, speaker)
+    role_ids = [2,3,5]
+    for role_id in role_ids:
+        size = 1
+        pageNumber = 0
     
-    for i in range(size):
-        data = users[i]
-        user_data = extract_user_data(data)
-        all_users.append(user_data)
+        event_link = "https://bizmatch.appsaya.com/"
+        url = event_link + "api/users/search/findByEventIdAndGroupId?projection=withUserGroup&eventId=" + str(event_id) + "&groupId=" + str(role_id) + "&size=" + str(size) + "&page=" + str(pageNumber)
+        
+        r = requests.get(url, headers={"X-BIZMATCH-API-KEY": API_KEY})
+    
+        dataset_users = r.json()
+        users = dataset_users['_embedded']['users']
+        size = dataset_users['page']['totalElements']
+    
+        r = requests.get(event_link + "api/users/search/findByEventIdAndGroupId?projection=withUserGroup&eventId=" + str(event_id) + "&groupId=" + str(role_id) + "&size=" + str(size) + "&page=" + str(pageNumber), headers={"X-BIZMATCH-API-KEY": API_KEY})
+        dataset_users = r.json()
+        users = dataset_users['_embedded']['users']
+        
+        for i in range(size):
+            data = users[i]
+            user_data = extract_user_data(data=data,user_role_id=role_id)
+            all_users.append(user_data)
 
     #while pageNumber < max_page:
         #for i in range(size):
@@ -108,7 +110,7 @@ df_users = pd.DataFrame(
     columns=[
         'user_salutation',
         'user_name',
-        #'user_level',
+        'user_role',
         'user_designation',
         'user_email',
         'user_verified',
@@ -152,15 +154,17 @@ st.header("Attendee Demographics")
 st.divider()
 
 st.markdown("**An Overview in Numbers**")
-# create 4 columns for number cards
-card1, card2, card3, card4, card5 = st.columns(5)
+# create columns for number cards
+col1, col2, col3, col4 = st.columns(4)
 # fill in those three columns with respective metrics or KPIs
-card1.metric(label="Countries", value=len(df_users.country_name.unique()))
-card2.metric(label="Participants", value=len(df_users.user_name.unique()))
-card3.metric(label="Companies", value=len(df_users.company_name.unique()))
-card4.metric(label="Job Titles/Designations",
-             value=len(df_users.user_designation.unique()))
-card5.metric(label="Meetings Booked", value=len(df_meetings.meeting_starttime))
+col1.metric(label="Countries", value=len(df_users.country_name.unique()))
+col1.metric(label="Companies", value=len(df_users.company_name.unique()))
+col2.metric(label="Meetings Booked", value=len(df_meetings.meeting_starttime))
+col2.metric(label="Job Titles/Designations", value=len(df_users.user_designation.unique()))
+col3.metric(label="Total Participants", value=len(df_users.user_name.unique()))
+col3.metric(label="Buyers", value=df_users['user_role'].value_counts()['buyer'])
+col4.metric(label="Sellers", value=df_users['user_role'].value_counts()['seller'])
+col4.metric(label="Speakers", value=df_users['user_role'].value_counts()['speaker'])
 
 # insert horizontal divider
 st.divider()
@@ -171,7 +175,7 @@ col1, col2 = st.columns([0.3, 0.7], gap="large")
 with col1:
     # Apply filter on the dataframe
     dynamic_filters = DynamicFilters(
-        df_users, filters=['country_name', 'company_name', 'user_designation','user_salutation'])
+        df_users, filters=['country_name', 'company_name','user_designation','user_salutation','user_role'])
     st.write("Apply filters in any order 👇")
     dynamic_filters.display_filters(location='columns', num_columns=1)
     #dynamic_filters.display_df()
@@ -243,6 +247,11 @@ with col2:
     fig.update_layout(uniformtext_minsize=12, uniformtext_mode='hide')
     st.plotly_chart(fig, key="user_designation", on_select="rerun",user_container_width=True)
 
+
+    with st.expander(
+            "View full details of participant data (filters apply):"
+    ):
+        st.write(df_filtered)
 ####################
 
 # REPORT SECTION 2
@@ -424,6 +433,26 @@ with c2:
     # Display df
     st.dataframe(industries_df)
 
+
+st.markdown("**Company Details**")
+try:
+    df_company = df_users.groupby('company_name').describe().reset_index()
+    #st.write(df_company.columns)
+
+    st.dataframe(df_company[[(        'company_name',       ''),
+                             (           'user_name',  'count'),
+                             (        'country_name',    'top'),
+                             (      'country_region',    'top'),
+                             (   'country_subregion',    'top'),
+                             ('company_industrylist',    'top'),
+                             (    'user_wanteddeals',    'top'),
+                             (   'user_interestlist',    'top'),]],
+            use_container_width=True
+            )
+except:
+    st.write("No Company Data Available")
+
+    
 st.divider()
 
 st.markdown("**All Meeting Data**")
