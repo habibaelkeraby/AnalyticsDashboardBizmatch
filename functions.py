@@ -7,7 +7,7 @@ Output is list of relevant user data to be appended to dataframe
 '''
 
 
-def extract_user_data(data):
+def extract_user_data(data,user_role_id):
 
   # Relevant data
 
@@ -39,10 +39,18 @@ def extract_user_data(data):
   user_interests = data['interestedIndustry']
   user_interestlist = [industry['name'] for industry in user_interests]
 
+  # User role (buyer, seller, speaker)
+  if user_role_id == 2:
+    user_role = 'buyer'
+  elif user_role_id == 3:
+    user_role = 'seller'
+  elif user_role_id == 5:
+    user_role = 'speaker'
+
   # Gather into list
   user_data = [user_salutation,
              user_name,
-             #user_level,
+             user_role,
              user_designation,
              user_email,
              user_verified,
@@ -52,7 +60,8 @@ def extract_user_data(data):
              company_name,
              company_industrylist,
              user_wanteddeals,
-             user_interestlist]
+             user_interestlist,
+]
 
   return user_data
 #####################
